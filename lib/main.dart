@@ -17,11 +17,11 @@ import 'presentation/screens/employee/employee_home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const AttendlyApp());
+  runApp(const MyApp());
 }
 
-class AttendlyApp extends StatelessWidget {
-  const AttendlyApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
