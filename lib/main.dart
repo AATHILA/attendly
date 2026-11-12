@@ -1,121 +1,111 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'core/constants/app_constants.dart';
+import 'data/repositories/attendance_repository_impl.dart';
+import 'data/repositories/auth_repository_impl.dart';
+import 'domain/entities/user_entity.dart';
+import 'domain/repositories/attendance_repository.dart';
+import 'domain/repositories/auth_repository.dart';
+import 'presentation/blocs/admin/admin_bloc.dart';
+import 'presentation/blocs/attendance/attendance_bloc.dart';
+import 'presentation/blocs/auth/auth_bloc.dart';
+import 'presentation/blocs/auth/auth_event.dart';
+import 'presentation/blocs/auth/auth_state.dart';
+import 'presentation/screens/admin/admin_dashboard_screen.dart';
+import 'presentation/screens/auth/login_screen.dart';
+import 'presentation/screens/employee/employee_home_screen.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const AttendlyApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+class AttendlyApp extends StatelessWidget {
+  const AttendlyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+    return MultiRepositoryProvider(
+      providers: [
+        RepositoryProvider<AuthRepository>(
+          create: (_) => AuthRepositoryImpl(),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+        RepositoryProvider<AttendanceRepository>(
+          create: (_) => AttendanceRepositoryImpl(),
+        ),
+      ],
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider<AuthBloc>(
+            create: (context) => AuthBloc(
+              authRepository: context.read<AuthRepository>(),
+            )..add(const CheckAuthStatus()),
+          ),
+          BlocProvider<AdminBloc>(
+            create: (context) => AdminBloc(
+              attendanceRepository: context.read<AttendanceRepository>(),
+            ),
+          ),
+          BlocProvider<AttendanceBloc>(
+            create: (context) => AttendanceBloc(
+              attendanceRepository: context.read<AttendanceRepository>(),
+            ),
+          ),
+        ],
+        child: MaterialApp(
+          title: AppConstants.appName,
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF2563EB), // Professional Indigo
+              brightness: Brightness.light,
+            ),
+            appBarTheme: const AppBarTheme(
+              centerTitle: true,
+              elevation: 0,
+              backgroundColor: Colors.transparent,
+              titleTextStyle: TextStyle(
+                color: Colors.black87,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+              iconTheme: IconThemeData(color: Colors.black87),
+            ),
+          ),
+          home: BlocBuilder<AuthBloc, AuthState>(
+            builder: (context, state) {
+              if (state is AuthAuthenticated) {
+                if (state.user.role == UserRole.admin) {
+                  return const AdminDashboardScreen();
+                } else {
+                  return EmployeeHomeScreen(user: state.user);
+                }
+              }
+              return const LoginScreen();
+            },
+          ),
+          onGenerateRoute: (settings) {
+            switch (settings.name) {
+              case '/login':
+                return MaterialPageRoute(builder: (_) => const LoginScreen());
+              case '/admin':
+                return MaterialPageRoute(builder: (_) => const AdminDashboardScreen());
+              case '/employee':
+                return MaterialPageRoute(
+                  builder: (context) {
+                    final authState = context.read<AuthBloc>().state;
+                    if (authState is AuthAuthenticated) {
+                      return EmployeeHomeScreen(user: authState.user);
+                    }
+                    return const LoginScreen();
+                  },
+                );
+              default:
+                return MaterialPageRoute(builder: (_) => const LoginScreen());
+            }
+          },
+        ),
       ),
     );
   }
