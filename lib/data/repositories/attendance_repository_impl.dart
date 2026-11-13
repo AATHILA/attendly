@@ -45,6 +45,15 @@ class AttendanceRepositoryImpl implements AttendanceRepository {
     final qrSessionId = qrData['sessionId'] as String;
     final qrType = AttendanceType.fromString(qrData['type'] as String);
 
+    // Verify session type matches user's action
+    if (qrType != type) {
+      final expected = type == AttendanceType.checkIn ? 'Check-In' : 'Check-Out';
+      final received = qrType == AttendanceType.checkIn ? 'Check-In' : 'Check-Out';
+      throw DuplicateAttendanceFailure(
+        'Session Mismatch: Scanned QR is for $received, but your action was $expected! Please switch to $expected on the Admin screen.',
+      );
+    }
+
     // 2. Prevent Duplicate Attendance
     if (qrType == AttendanceType.checkIn) {
       final alreadyCheckedIn = await database.hasCheckedInToday(employeeId);
@@ -142,6 +151,11 @@ class AttendanceRepositoryImpl implements AttendanceRepository {
   @override
   Future<bool> hasCheckedInToday(String employeeId) async {
     return await database.hasCheckedInToday(employeeId);
+  }
+
+  @override
+  Future<bool> hasCheckedOutToday(String employeeId) async {
+    return await database.hasCheckedOutToday(employeeId);
   }
 
   @override

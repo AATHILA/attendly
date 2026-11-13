@@ -70,10 +70,12 @@ class AttendanceBloc extends Bloc<AttendanceEvent, AttendanceState> {
     try {
       final records = await attendanceRepository.getEmployeeHistory(event.employeeId);
       final hasCheckedIn = await attendanceRepository.hasCheckedInToday(event.employeeId);
+      final hasCheckedOut = await attendanceRepository.hasCheckedOutToday(event.employeeId);
 
       emit(state.copyWith(
         history: records,
         hasCheckedInToday: hasCheckedIn,
+        hasCheckedOutToday: hasCheckedOut,
       ));
     } catch (_) {
       // Keep existing state if offline or cache error

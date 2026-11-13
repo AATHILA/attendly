@@ -25,6 +25,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    // Auto-refresh attendance records whenever switching to the Logs tab
+    _tabController.addListener(() {
+      if (_tabController.index == 1 && !_tabController.indexIsChanging) {
+        context.read<AdminBloc>().add(const FetchAllRecordsEvent());
+      }
+    });
+
     // Generate initial Check-In QR session and fetch existing records
     context.read<AdminBloc>().add(
           const GenerateQRSessionEvent(AttendanceType.checkIn),
@@ -52,6 +59,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         title: const Text('Admin Console'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh Logs',
+            onPressed: () {
+              context.read<AdminBloc>().add(const FetchAllRecordsEvent());
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Logout',
             onPressed: _onLogout,
@@ -59,6 +73,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
         ],
         bottom: TabBar(
           controller: _tabController,
+          onTap: (index) {
+            if (index == 1) {
+              context.read<AdminBloc>().add(const FetchAllRecordsEvent());
+            }
+          },
           tabs: const [
             Tab(icon: Icon(Icons.qr_code_2), text: 'Dynamic QR'),
             Tab(icon: Icon(Icons.table_chart_outlined), text: 'Attendance Logs'),

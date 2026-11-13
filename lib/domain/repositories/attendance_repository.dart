@@ -20,6 +20,9 @@ abstract class AttendanceRepository {
   /// Checks if employee already checked in today (duplicate prevention)
   Future<bool> hasCheckedInToday(String employeeId);
 
+  /// Checks if employee already checked out today
+  Future<bool> hasCheckedOutToday(String employeeId);
+
   /// Syncs pending offline records to mock server
   Future<int> syncOfflineRecords();
 }

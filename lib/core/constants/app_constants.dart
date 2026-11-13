@@ -3,7 +3,7 @@ class AppConstants {
   static const String appName = 'Attendly';
 
   // QR Code Security & Expiry
-  static const int qrValiditySeconds = 45; // QR regenerates / expires every 45s
+  static const int qrValiditySeconds = 120; // 2 minutes: ensures enough time for demo and scanning
   static const String qrSecretKey = 'ATTENDLY_SECURE_HMAC_SECRET_KEY_2026';
 
   // Office Location for Geofence validation (e.g., Headquarters)

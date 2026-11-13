@@ -30,12 +30,39 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
   }
 
   void _onLogout() {
-    context.read<AuthBloc>().add(const LogoutRequested());
-    Navigator.of(context).pushReplacementNamed('/login');
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: const Text('Log Out?'),
+        content: const Text(
+          'Logging out only signs you out of your account.\n\n'
+          '⚠️ Note: Logging out does NOT mark attendance check-out. '
+          'To record your attendance departure, please tap "Scan QR for Check-Out" first.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Navigator.of(dialogCtx).pop();
+              context.read<AuthBloc>().add(const LogoutRequested());
+              Navigator.of(context).pushReplacementNamed('/login');
+            },
+            child: const Text('Log Out'),
+          ),
+        ],
+      ),
+    );
   }
 
-  void _navigateToScanner(AttendanceType type) {
-    Navigator.of(context).push(
+  void _navigateToScanner(AttendanceType type) async {
+    await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => QRScannerScreen(
           user: widget.user,
@@ -43,6 +70,11 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
         ),
       ),
     );
+    if (mounted) {
+      context.read<AttendanceBloc>().add(
+            FetchEmployeeHistoryRequested(widget.user.id),
+          );
+    }
   }
 
   void _navigateToHistory() {

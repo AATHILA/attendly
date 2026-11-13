@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:uuid/uuid.dart';
+import '../../../core/constants/app_constants.dart';
+import '../../../core/utils/qr_crypto_helper.dart';
 import '../../../domain/entities/attendance_entity.dart';
 import '../../../domain/entities/user_entity.dart';
 import '../../blocs/attendance/attendance_bloc.dart';
@@ -181,21 +184,61 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
               ),
             ),
 
-            // Bottom Instructions Banner
+            // Bottom Instructions & Quick Test Banner
             Positioned(
-              bottom: 40,
-              left: 24,
-              right: 24,
+              bottom: 30,
+              left: 20,
+              right: 20,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.7),
-                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.black.withOpacity(0.78),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                child: const Text(
-                  'Point camera at the dynamic QR code displayed on the Admin screen.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white, fontSize: 13),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Point camera at the dynamic QR code displayed on the Admin screen.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.white, fontSize: 13),
+                    ),
+                    const SizedBox(height: 10),
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        side: const BorderSide(color: Colors.white54),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      icon: const Icon(Icons.flash_on, size: 16, color: Colors.amberAccent),
+                      label: Text(
+                        isCheckIn
+                            ? '⚡ Test Scan Check-In (Single Device Demo)'
+                            : '⚡ Test Scan Check-Out (Single Device Demo)',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      onPressed: () {
+                        final dummyPayload = QrCryptoHelper.createSignedQrPayload(
+                          sessionId: const Uuid().v4(),
+                          type: isCheckIn ? 'CHECK_IN' : 'CHECK_OUT',
+                          validFrom: DateTime.now(),
+                          validUntil: DateTime.now().add(
+                            const Duration(seconds: AppConstants.qrValiditySeconds),
+                          ),
+                        );
+                        context.read<AttendanceBloc>().add(
+                              MarkAttendanceRequested(
+                                rawQrPayload: dummyPayload,
+                                employeeId: widget.user.id,
+                                employeeName: widget.user.name,
+                                type: widget.sessionType,
+                              ),
+                            );
+                      },
+                    ),
+                  ],
                 ),
               ),
             ),
